@@ -1,0 +1,42 @@
+version: "3"
+
+services:
+  mongodb:
+    image: mongo:8.0
+    environment:
+      - MONGODB_DATABASE="birthday"
+    ports:
+      - 27017:27017
+    volumes:
+      - mongo-data:/data/db
+
+  birthday-worker:
+    build:
+      context: ./birthday-worker
+    container_name: birthday-worker
+    ports:
+      - '3001:3001'
+    environment:
+      MONGO_URI: mongodb://mongodb:27017/birthday
+      APP_PORT: 3001
+      REMINDER_HOUR: 9
+      REMINDER_MINUTE: 0
+    depends_on:
+      - mongodb
+
+  birthday-app:
+    build:
+      context: ./birthday-app
+    container_name: birthday-app
+    ports:
+      - '3000:3000'
+    environment:
+      MONGO_URI: mongodb://mongodb:27017/birthday
+      APP_PORT: 3000
+    depends_on:
+      - mongodb
+      - birthday-worker
+
+volumes:
+  mongo-data:
+    driver: local
